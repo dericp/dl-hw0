@@ -14,18 +14,25 @@ void activate_matrix(matrix m, ACTIVATION a)
         for(j = 0; j < m.cols; ++j){
             double x = m.data[i*m.cols + j];
             if(a == LOGISTIC){
-                // TODO
+                m.data[i * m.cols + j] = 1.0 / (1.0 + exp(-x));
             } else if (a == RELU){
-                // TODO
+                if (x <= 0) {
+                    m.data[i * m.cols + j] = 0;
+                }
             } else if (a == LRELU){
-                // TODO
+                if (x <= 0) {
+                    m.data[i * m.cols + j] = 0.1 * x;
+                }
             } else if (a == SOFTMAX){
-                // TODO
+                m.data[i * m.cols + j] = exp(x);
             }
             sum += m.data[i*m.cols + j];
         }
         if (a == SOFTMAX) {
-            // TODO: have to normalize by sum if we are using SOFTMAX
+            for (int col = 0; col < m.cols; col++) {
+                double x = m.data[i * m.cols + col];
+                m.data[i * m.cols + col] = x / sum;
+            }
         }
     }
 }
@@ -38,10 +45,23 @@ void activate_matrix(matrix m, ACTIVATION a)
 void gradient_matrix(matrix m, ACTIVATION a, matrix d)
 {
     int i, j;
-    for(i = 0; i < m.rows; ++i){
-        for(j = 0; j < m.cols; ++j){
+    float *ddata = d.data;
+    for (i = 0; i < m.rows; ++i){
+        for (j = 0; j < m.cols; ++j){
             double x = m.data[i*m.cols + j];
-            // TODO: multiply the correct element of d by the gradient
+            // potentially much faster to put ifs somewhere else
+            if (a == LOGISTIC) {
+                *ddata = (*ddata) * x * (1 - x);
+            } else if (a == RELU) {
+                if (x <= 0) {
+                    *ddata = 0.0;
+                }
+            } else if (a == LRELU) {
+                if (x <= 0) {
+                    *ddata = 0.1 * (*ddata);
+                }
+            }
+            ddata++;
         }
     }
 }
